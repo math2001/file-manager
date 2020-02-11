@@ -1,14 +1,21 @@
 # -*- encoding: utf-8 -*-
+import sublime
 import sublime_plugin
-from ..libs.sublimefunctions import get_settings, to_snake_case
 
 
-class AppCommand(sublime_plugin.ApplicationCommand):
+class FmWindowCommand(sublime_plugin.WindowCommand):
+
+    @property
+    def settings(cls):
+        try:
+            return cls.settings_
+        except AttributeError:
+            cls.settings_ = sublime.load_settings("FileManager.sublime-settings")
+            return cls.settings_
+
     def is_visible(self, *args, **kwargs):
-        settings = get_settings()
-        show = settings.get(
-            "show_" + to_snake_case(type(self).__name__.replace("Fm", ""))
-        )
+        name = "show_{}_command".format(self.name().replace("fm_", ""))
+        show = self.settings.get(name)
         if show is None:
             # this should never happen, this is an error
             # we could nag the user to get him to report that issue,
@@ -25,7 +32,7 @@ class AppCommand(sublime_plugin.ApplicationCommand):
         return bool(
             show
             and (
-                not settings.get("menu_without_distraction")
+                not self.settings.get("menu_without_distraction")
                 or self.is_enabled(*args, **kwargs)
             )
         )

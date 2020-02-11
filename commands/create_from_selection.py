@@ -5,7 +5,7 @@ from re import compile as re_comp
 import sublime
 import sublime_plugin
 
-from ..libs.sublimefunctions import *
+from ..libs.pathhelper import computer_friendly, user_friendly
 
 """ This command has been inspired at 90% by the open_url_context command
 AND the vintage open_file_under_selection. Thanks John!"""
@@ -30,6 +30,14 @@ class FmCreateFileFromSelectionCommand(sublime_plugin.TextCommand):
     MATCH_SOURCE_ATTR = re_comp(r"(src|href) *= *$")
     MATCH_JS_REQUIRE = re_comp(r"require\(\s*$")
     MATCH_RUBY_REQUIRE = re_comp(r"require_relative\s*\(?\s*$")
+
+    @property
+    def settings(cls):
+        try:
+            return cls.settings_
+        except AttributeError:
+            cls.settings_ = sublime.load_settings("FileManager.sublime-settings")
+            return cls.settings_
 
     def run(self, edit, event):
         base_path, input_path = self.get_path(event)
@@ -139,7 +147,7 @@ class FmCreateFileFromSelectionCommand(sublime_plugin.TextCommand):
         if event is None:
             return False
         return (
-            get_settings().get("show_create_from_selection_command")
+            self.settings.get("show_create_from_selection_command") is True
             and self.view.file_name() is not None
             and self.get_path(event) is not None
         )
